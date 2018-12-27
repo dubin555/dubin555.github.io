@@ -7,22 +7,27 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Steaming Serivce | dubin555的博客</title>
-    <meta property="og:title" content="Steaming Serivce - dubin555的博客">
+    <title>About Me | dubin555的博客</title>
+    <meta property="og:title" content="About Me - dubin555的博客">
     <meta property="og:type" content="article">
         
+    <meta property="article:published_time" content="2018-12-26T00:00:00&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2018-12-26T00:00:00&#43;08:00">
         
     <meta name="Keywords" content="大数据架构、Apache Spark、Apache Flink、Java、Scala、golang">
-    <meta name="description" content="Steaming Serivce">
+    <meta name="description" content="About Me">
         
     <meta name="author" content="dubin555">
-    <meta property="og:url" content="https://dubin555.github.io/tags/steaming-serivce/">
+    <meta property="og:url" content="https://dubin555.github.io/about/">
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 
     <link rel="stylesheet" href="/css/normalize.css">
     
+        <link rel="stylesheet" href="/css/prism.css">
+    
     <link rel="stylesheet" href="/css/style.css">
-    <link rel="alternate" type="application/rss+xml+xml" href="https://dubin555.github.io/tags/steaming-serivce/index.xml" title="dubin555的博客" />
     <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
 
     
@@ -31,7 +36,6 @@
     
     
 </head>
-
 
 <body>
 <header id="header" class="clearfix">
@@ -51,7 +55,7 @@
                     
                     <a  href="https://dubin555.github.io/archives/" title="归档">归档</a>
                     
-                    <a  href="https://dubin555.github.io/about/" title="关于">关于</a>
+                    <a class="current" href="https://dubin555.github.io/about/" title="关于">关于</a>
                     
                 </nav>
             </div>
@@ -66,62 +70,48 @@
 
             <div class="col-8" id="main">
                 <div class="res-cons">
-                    
-                    <h3 class="archive-title">
-                        包含标签
-                        <span class="keyword">steaming-serivce</span>
-                        的文章
-                    </h3>
-                    
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">About Me</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2018年12月26日
+                        </date>
+                        
+                        
+                        <div class="post-content">
+                            <p>14年硕士毕业， 目前专注大数据领域。
+邮箱: dubin555@gmail.com</p>
 
-                    
-                        <article class="post">
-                            <header>
-                                <h1 class="post-title">
-                                    <a href="https://dubin555.github.io/post/streaming-service/">基于Structured Streaming的streaming service</a>
-                                </h1>
-                            </header>
-                            <date class="post-meta meta-date">
-                                2018年11月15日
-                            </date>
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="/post/streaming-service/">基于Structured Streaming的streaming service</a></li>
+        
+        <li><a href="/archives/"></a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
                             
-                            <div class="post-meta meta-category">
-                                |
-                                
-                                    <a href="https://dubin555.github.io/categories/%E6%9E%B6%E6%9E%84">架构</a>
-                                
-                            </div>
+                            没有标签
                             
-                            <div class="post-content">
-                                <p>近期完成了公司实时作业平台的构建， 把一些经验先记录一下。</p>
-
-<h3 id="选型">选型</h3>
-
-<h4 id="数据采集">数据采集</h4>
-
-<p>Server 端采用的是Flume 和 Logstash
-Native端采用的自研的一个go service</p>
-
-<h4 id="数据队列">数据队列</h4>
-
-<p>公认的Kafka</p>
-
-<h4 id="数据处理">数据处理</h4>
-
-<p>鉴于公司对于Spark技术栈比较熟， 批处理也有相应的积累， 所以大部分常用的场景采用的都是Structured …</p>
-                                <p class="readmore"><a href="https://dubin555.github.io/post/streaming-service/">阅读全文</a></p>
-                            </div>
-                        </article>
+                        </div>
+                    </article>
                     
+    
 
-                    
-
-
-
-
+    
+    
                 </div>
             </div>
-
             <div id="secondary">
     <section class="widget">
         <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
@@ -191,9 +181,24 @@ Native端采用的自研的一个go service</p>
 </footer>
 
 
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
 <a id="rocket" href="#top"></a>
 <script type="text/javascript" src="/js/totop.js?v=0.0.0" async=""></script>
-
 
 
 
