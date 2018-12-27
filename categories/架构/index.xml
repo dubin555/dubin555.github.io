@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>dubin555的博客</title>
-    <link>/</link>
-    <description>Recent content on dubin555的博客</description>
+    <title>架构 on dubin555的博客</title>
+    <link>/categories/%E6%9E%B6%E6%9E%84/</link>
+    <description>Recent content in 架构 on dubin555的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-CN</language>
     <lastBuildDate>Thu, 15 Nov 2018 14:19:34 +0800</lastBuildDate>
     
-	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/%E6%9E%B6%E6%9E%84/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -25,15 +25,6 @@
 主要讲下基于Structured streaming的服务 背景 目前日志量大概每天几T， 大概可以分为用量日志， 质量日志， 行为日志等等。 需要用这些日志来进行实时统计， 告警。 需要流-流join， 流-维度表join的场景。
 架构 大概使用了 Akka + Zookeeper + Redis + Spark + Spring Boot. 每个Actor都将自己的地址向Zookeeper注册，用户提交job配置的时候， 会通过一个query balancer 来找到自己合适的spark session来执行任务， 用户停止job或者查看job状态的时候也会通过query balancer。 这里面还是有不少坑的， 例如 1. 都是实时的job， 如果job抛异常了， 外部怎么感知？（最暴力的方法， try-catch全部包起来， 一般抛异常， 向外部存储写状态和异常信息）
  如果是机器突然断电， 死机， 来不急写外部存储就挂了？（更暴力， 每个StreamingQuery都开一个定时任务， 每隔5秒写一个ttl为10秒的Redis key）</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>/archives/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/archives/</guid>
-      <description></description>
     </item>
     
   </channel>

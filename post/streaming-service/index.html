@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="generator" content="Hugo 0.53" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>基于Structured Streaming的streaming service | dubin555的博客</title>
+    <meta property="og:title" content="基于Structured Streaming的streaming service - dubin555的博客">
+    <meta property="og:type" content="article">
+        
+    <meta property="article:published_time" content="2018-11-15T14:19:34&#43;08:00">
+        
+        
+    <meta property="article:modified_time" content="2018-11-15T14:19:34&#43;08:00">
+        
+    <meta name="Keywords" content="大数据架构、Apache Spark、Apache Flink、Java、Scala、golang">
+    <meta name="description" content="基于Structured Streaming的streaming service">
+        <meta name="author" content="dubin555">
+        
+    <meta property="og:url" content="/post/streaming-service/">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    
+        <link rel="stylesheet" href="/css/prism.css">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <script type="text/javascript" src="//cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+
+    
+
+
+    
+    
+</head>
+
+<body>
+<header id="header" class="clearfix">
+    <div class="container">
+        <div class="col-group">
+            <div class="site-name ">
+                
+                    <a id="logo" href="">
+                        dubin555的博客
+                    </a>
+                
+                <p class="description">专注于大数据架构、Apache Spark、Apache Flink、Java、Scala、Go语言(golang)</p>
+            </div>
+            <div>
+                <nav id="nav-menu" class="clearfix">
+                    <a class="current" href="">首页</a>
+                    
+                    <a  href="/archives/" title="归档">归档</a>
+                    
+                    <a  href="/about/" title="关于">关于</a>
+                    
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div id="body">
+    <div class="container">
+        <div class="col-group">
+
+            <div class="col-8" id="main">
+                <div class="res-cons">
+                    <article class="post">
+                        <header>
+                            <h1 class="post-title">基于Structured Streaming的streaming service</h1>
+                        </header>
+                        <date class="post-meta meta-date">
+                            2018年11月15日
+                        </date>
+                        
+                        <div class="post-meta">
+                            <span>|</span>
+                            
+                                <span class="meta-category"><a href="/categories/%E6%9E%B6%E6%9E%84">架构</a></span>
+                            
+                        </div>
+                        
+                        
+                        <div class="post-content">
+                            
+
+<p>近期完成了公司实时作业平台的构建， 把一些经验先记录一下。</p>
+
+<h3 id="选型">选型</h3>
+
+<h4 id="数据采集">数据采集</h4>
+
+<p>Server 端采用的是Flume 和 Logstash
+Native端采用的自研的一个go service</p>
+
+<h4 id="数据队列">数据队列</h4>
+
+<p>公认的Kafka</p>
+
+<h4 id="数据处理">数据处理</h4>
+
+<p>鉴于公司对于Spark技术栈比较熟， 批处理也有相应的积累， 所以大部分常用的场景采用的都是Structured streaming, 一小部分需要session window 或者 CEP的业务采用Flink完成。</p>
+
+<h4 id="数据存储">数据存储</h4>
+
+<p>Kafka, Phonenix, Ignite, Oracle</p>
+
+<h3 id="主要讲下基于structured-streaming的服务">主要讲下基于Structured streaming的服务</h3>
+
+<h4 id="背景">背景</h4>
+
+<p>目前日志量大概每天几T， 大概可以分为用量日志， 质量日志， 行为日志等等。 需要用这些日志来进行实时统计， 告警。 需要流-流join， 流-维度表join的场景。</p>
+
+<h4 id="架构">架构</h4>
+
+<p>大概使用了 Akka + Zookeeper + Redis + Spark + Spring Boot.
+每个Actor都将自己的地址向Zookeeper注册，用户提交job配置的时候， 会通过一个query balancer 来找到自己合适的spark session来执行任务， 用户停止job或者查看job状态的时候也会通过query balancer。
+这里面还是有不少坑的， 例如
+1. 都是实时的job， 如果job抛异常了， 外部怎么感知？（最暴力的方法， try-catch全部包起来， 一般抛异常， 向外部存储写状态和异常信息）</p>
+
+<ol>
+<li><p>如果是机器突然断电， 死机， 来不急写外部存储就挂了？（更暴力， 每个StreamingQuery都开一个定时任务， 每隔5秒写一个ttl为10秒的Redis key）</p></li>
+
+<li><p>Structured streaming 都是实时的job， 怎么拿到每个批次的输出， 像console一样？（可以看我另一个issure #2 ， 其中是写到Redis里， 按BatchId 来存储的sorted set）</p></li>
+
+<li><p>怎么kill掉job？（如果Actor当前正在执行任务， 就从当前的zookeeper server list移除自己， kill的请求会通过其他的Actor来kill掉streamingQuery， ps. job提交成功之后， job与运行该job的actor group的映射关系会写到外部存储， actor group信息也会在zookeeper中体现）</p></li>
+
+<li><p>job之间怎么防止互相影响？（暴力， 当前job name是唯一的， 里面创建的所有的sql table view都有自己job name的前缀）</p></li>
+
+<li><p>如果spark session都yarn干掉了， 怎么释放掉其他同组的Actor？（每个Actor都有定时器， 来看sparkContext是不是挂了， 挂了的话， 把自己干掉）</p></li>
+
+<li><p>有没有单点？（大部分没有， Zookeeper 三台， Redis 三台哨兵模式： RDB + AOF， RDB每小时一份， 保存两天， 每天一份保存一周， 一天一次上传HDFS， Spring Boot倒是单点， 不过也没多大请求， 目前没多大事）</p></li>
+
+<li><p>怎么扩容？ （目前只能手动spark2-submit， 不需要改动任何东西， 当然里面的配置要改一下， 动态调整executor数量）</p></li>
+
+<li><p>可以自己写代码吗， 不想用网页版的？（也可以， 单机版和网页版底层用的StreamingContext都是一样的。</p></li>
+
+<li><p>怎么控制job的数量？（控制Actor的并发量， 以及zookeeper的上下线）</p></li>
+</ol>
+
+<p>等等， 其他的也说不明白了， 只能说坑不少。做完是费了很多劲的。</p>
+
+<h3 id="感谢">感谢</h3>
+
+<p>谢谢我自己， 之前也做过类似批处理的， 所以这次做实时的第一版大概一周就写好了， 结果发现，实时的要比批的难多了。。。改了2周多。。。半个月前完成的差不多了。前端还写了一周多， 写不明白了， 放弃了React, 找前端同事写了。</p>
+
+<h3 id="后记">后记</h3>
+
+<p>已经上线了。
+下次把做批处理的和Flink的也记录下。</p>
+
+                        </div>
+
+                        
+
+<div class="post-archive">
+    <h2>See Also</h2>
+    <ul class="listing">
+        
+        <li><a href="/archives/"></a></li>
+        
+    </ul>
+</div>
+
+
+                        <div class="post-meta meta-tags">
+                            
+                            <ul class="clearfix">
+                                
+                                <li><a href="/tags/structrued-streaming">Structrued Streaming</a></li>
+                                
+                                <li><a href="/tags/apache-spark">Apache Spark</a></li>
+                                
+                                <li><a href="/tags/steaming-serivce">Steaming Serivce</a></li>
+                                
+                            </ul>
+                            
+                        </div>
+                    </article>
+                    
+    
+
+    
+    
+                </div>
+            </div>
+            <div id="secondary">
+    <section class="widget">
+        <form id="search" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank" _lpchecked="1">
+      
+      <input type="text" name="q" maxlength="20" placeholder="Search">
+      <input type="hidden" name="sitesearch" value="">
+      <button type="submit" class="submit icon-search"></button>
+</form>
+    </section>
+    
+    <section class="widget">
+        <h3 class="widget-title">最近文章</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="/post/streaming-service/" title="基于Structured Streaming的streaming service">基于Structured Streaming的streaming service</a>
+    </li>
+    
+</ul>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">分类</h3>
+<ul class="widget-list">
+    
+    <li>
+        <a href="/categories/%E6%9E%B6%E6%9E%84/">架构(1)</a>
+    </li>
+    
+</ul>
+    </section>
+
+    <section class="widget">
+        <h3 class="widget-title">标签</h3>
+<div class="tagcloud">
+    
+    <a href="/tags/apache-spark/">apache-spark</a>
+    
+    <a href="/tags/steaming-serivce/">steaming-serivce</a>
+    
+    <a href="/tags/structrued-streaming/">structrued-streaming</a>
+    
+</div>
+    </section>
+
+    
+
+    <section class="widget">
+        <h3 class="widget-title">其它</h3>
+        <ul class="widget-list">
+            <li><a href="index.xml">文章 RSS</a></li>
+        </ul>
+    </section>
+</div>
+        </div>
+    </div>
+</div>
+<footer id="footer">
+    <div class="container">
+        &copy; 2018 <a href="">dubin555的博客 By dubin555</a>.
+        Powered by <a rel="nofollow noreferer noopener" href="https://gohugo.io" target="_blank">Hugo</a>.
+        <a href="http://www.flysnow.org/" target="_blank">Theme</a> based on <a href="https://github.com/rujews/maupassant-hugo" target="_blank">maupassant</a>.
+        
+    </div>
+</footer>
+
+
+    <script type="text/javascript">
+    
+    (function(){
+        $("pre code").parent().addClass("line-numbers")
+    }())
+
+    window.MathJax = {
+        tex2jax: {
+            inlineMath: [ ['$','$'] ],
+            processEscapes: true
+        }
+    };
+    </script>
+    <script type="text/javascript" src="/js/prism.js" async="true"></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+
+<a id="rocket" href="#top"></a>
+<script type="text/javascript" src="/js/totop.js?v=0.0.0" async=""></script>
+
+
+
+
+
+
+</body>
+</html>
